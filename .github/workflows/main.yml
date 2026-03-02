@@ -1,0 +1,68 @@
+name: UI Tests (Selenide + TestNG)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Клонируем репозиторий
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Устанавливаем Java
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3. Проверяем наличие Chrome (он установлен в GitHub‑runner по умолчанию)
+      - name: Check Chrome version
+        run: google-chrome --version
+
+      # 4. Устанавливаем Allure CLI (нужно для генерации отчёта)
+      - name: Install Allure
+        run: |
+          sudo apt-add-repository ppa:qameta/allure -y
+          sudo apt-get update
+          sudo apt-get install allure -y
+
+      # 5. Запускаем тесты (headless переключается через -Dheadless=true)
+      - name: Run Tests
+        run: mvn -B clean test -Dheadless=true
+
+      # 6. Сохраняем артефакты surefire (отчёты TestNG)
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: surefire-reports
+          path: target/surefire-reports
+
+      # 7. Сохраняем allure‑results
+      - name: Upload allure results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-results
+          path: target/allure-results
+
+      # 8. Генерируем Allure HTML‑отчёт
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          allure generate target/allure-results -o target/allure-report --clean
+
+      # 9. Публикуем Allure HTML как артефакт
+      - name: Upload Allure Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-report
+          path: target/allure-report
