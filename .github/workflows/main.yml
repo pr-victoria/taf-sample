@@ -1,43 +1,55 @@
-name: UI Tests (Selenide + TestNG)
+name: Tests
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   tests:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Клонируем репозиторий
-      - name: Checkout repository
+      # 1) Получаем код
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Устанавливаем Java
-      - name: Set up JDK 17
+      # 2) Устанавливаем JDK 17 и включаем кэш Maven
+      - name: Set up Temurin JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
+          cache: 'maven'
 
-      # 3. Проверяем наличие Chrome (он установлен в GitHub‑runner по умолчанию)
+      # 3) Устанавливаем Node.js (для Allure CLI)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 4) Ставим Allure CLI глобально
+      - name: Install Allure CLI
+        run: npm i -g allure-commandline
+
+      # 5) (Опционально) вывод версии Chrome — убедиться, что браузер есть
       - name: Check Chrome version
-        run: google-chrome --version
+        run: google-chrome --version || true
 
-      # 4. Устанавливаем Allure CLI (нужно для генерации отчёта)
-      - name: Install Allure
-        run: |
-          sudo apt-add-repository ppa:qameta/allure -y
-          sudo apt-get update
-          sudo apt-get install allure -y
-
-      # 5. Запускаем тесты (headless переключается через -Dheadless=true)
-      - name: Run Tests
+      # 6) Запуск тестов (в вашем коде headless читается как -Dheadless=true)
+      - name: Run tests (headless)
         run: mvn -B clean test -Dheadless=true
 
-      # 6. Сохраняем артефакты surefire (отчёты TestNG)
+      # 7) Генерация Allure HTML-отчёта
+      - name: Generate Allure Report
+        if: always()
+        run: |
+          allure --version
+          allure generate target/allure-results -o target/allure-report --clean
+
+      # 8) Публикуем артефакты — surefire отчёты TestNG
       - name: Upload surefire reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -45,7 +57,7 @@ jobs:
           name: surefire-reports
           path: target/surefire-reports
 
-      # 7. Сохраняем allure‑results
+      # 9) Публикуем артефакты — «сырые» результаты Allure
       - name: Upload allure results
         if: always()
         uses: actions/upload-artifact@v4
@@ -53,14 +65,8 @@ jobs:
           name: allure-results
           path: target/allure-results
 
-      # 8. Генерируем Allure HTML‑отчёт
-      - name: Generate Allure Report
-        if: always()
-        run: |
-          allure generate target/allure-results -o target/allure-report --clean
-
-      # 9. Публикуем Allure HTML как артефакт
-      - name: Upload Allure Report
+      # 10) Публикуем артефакты — HTML Allure отчёт
+      - name: Upload Allure report
         if: always()
         uses: actions/upload-artifact@v4
         with:
