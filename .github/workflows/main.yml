@@ -41,6 +41,13 @@ jobs:
       # 6) Запуск тестов (в вашем коде headless читается как -Dheadless=true)
       - name: Run tests (headless)
         run: mvn -B clean test -Dheadless=true
+        
+      - name: List allure-results
+        if: always()
+        run: |
+          ls -la target || true
+          ls -la target/allure-results || true
+          echo "count=$(ls -1 target/allure-results/*.json 2>/dev/null | wc -l)"
 
       # 7) Генерация Allure HTML-отчёта
       - name: Generate Allure Report
