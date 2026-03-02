@@ -1,17 +1,23 @@
-package ui;
+package ui.tests;
 
 import com.codeborne.selenide.logevents.SelenideLogger;
-import org.testng.annotations.BeforeClass;
 import io.qameta.allure.selenide.AllureSelenide;
-
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
+import ui.core.BrowserConfiguration;
 
+import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static com.codeborne.selenide.Selenide.open;
 
 public class BaseTest {
 
-    @BeforeClass
+    BrowserConfiguration browserConfiguration = new BrowserConfiguration();
+
+
+    @BeforeMethod
     public void setUp() {
+        browserConfiguration.configureBrowser();
         open("https://www.saucedemo.com/");
     }
 
@@ -24,5 +30,13 @@ public class BaseTest {
                         .includeSelenideSteps(true) // Логи шагов Selenide (клики, ввод текста)
         );
     }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDown() {
+        closeWebDriver();
+    }
+
+
+
 
 }

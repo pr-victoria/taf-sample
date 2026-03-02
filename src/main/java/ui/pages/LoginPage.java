@@ -27,5 +27,11 @@ public class LoginPage {
     public void verifyLoginPageIsOpened() {
         username.shouldBe(visible);
     }
+
+    public void logIn(String username, String password) {
+        fillUsername(username);
+        fillPassword(password);
+        clickLoginBtn();
+    }
 }
 

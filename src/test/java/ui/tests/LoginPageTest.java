@@ -1,14 +1,12 @@
-package ui;
+package ui.tests;
 
-import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.Test;
 import ui.pages.InventoryPage;
 import ui.pages.LoginPage;
 
-@Slf4j
 public class LoginPageTest extends BaseTest {
 
-    @Test(priority = 1)
+    @Test
     public void successfulLoginTest() {
         LoginPage loginPage = new LoginPage();
         InventoryPage inventoryPage = new InventoryPage();
@@ -18,18 +16,21 @@ public class LoginPageTest extends BaseTest {
         inventoryPage.verifyInventoryPageOpened();
     }
 
-    @Test(priority = 2)
+    @Test
     public void addToCartTest() {
+        LoginPage loginPage = new LoginPage();
         InventoryPage inventoryPage = new InventoryPage();
+        loginPage.logIn("standard_user", "secret_sauce");
         inventoryPage.clickAddBackpackToCartBtn();
         inventoryPage.goToCartPage();
         inventoryPage.verifyBackpackItemAddedToCart();
     }
 
-    @Test(priority = 3)
+    @Test
     public void successfulLogoutTest() {
         InventoryPage inventoryPage = new InventoryPage();
         LoginPage loginPage = new LoginPage();
+        loginPage.logIn("standard_user", "secret_sauce");
         inventoryPage.openMenu();
         inventoryPage.clickLogoutBtn();
         loginPage.verifyLoginPageIsOpened();
